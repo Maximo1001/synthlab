@@ -1,0 +1,33 @@
+# /etc/systemd/system/synthlab.service — despliegue sin Docker (gunicorn en 127.0.0.1:8000)
+[Unit]
+Description=SYNTHLAB (gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=synthlab
+Group=synthlab
+WorkingDirectory=/srv/synthlab
+EnvironmentFile=/etc/synthlab/synthlab.env
+ExecStart=/srv/synthlab/.venv/bin/gunicorn -c gunicorn.conf.py synthlab.wsgi:app
+Restart=on-failure
+# Bastionado systemd
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+SystemCallFilter=@system-service
+ReadWritePaths=/var/lib/synthlab /var/log/synthlab
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

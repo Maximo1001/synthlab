@@ -1,0 +1,9 @@
+[Unit]
+Description=SYNTHLAB limpieza de sesiones/tokens caducados
+
+[Service]
+Type=oneshot
+User=synthlab
+WorkingDirectory=/srv/synthlab
+EnvironmentFile=/etc/synthlab/synthlab.env
+ExecStart=/srv/synthlab/.venv/bin/flask --app synthlab:create_app cleanup
