@@ -22,7 +22,7 @@ async function derive(pw, salt) {
 }
 function same(a, b) { if (a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; }
 
-const COMMON = ['123456789012', 'password1234', 'qwertyuiop12', 'contraseña123', 'synthlab1234', 'qwerty123456'];
+const COMMON = ['123456789012', 'password1234', 'qwertyuiop12', 'contraseña123', 'synthlab1234', 'qwerty123456']; // gitleaks:allow — lista de contraseñas PROHIBIDAS, no un secreto
 function policy(pw, email, name) {
   if (typeof pw !== 'string' || pw.length < 12) return 'La contraseña debe tener al menos 12 caracteres.';
   if (pw.length > 128) return 'La contraseña no puede superar 128 caracteres.';
