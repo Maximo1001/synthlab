@@ -1,0 +1,29 @@
+services:
+  synthlab:
+    build: .
+    env_file: .env
+    environment:
+      SYNTHLAB_FORWARDED_ALLOW_IPS: "*"   # sólo nginx alcanza el contenedor (red interna)
+    volumes:
+      - synthlab-data:/var/lib/synthlab
+      - synthlab-logs:/var/log/synthlab
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    networks: [internal]
+  nginx:
+    image: nginx:1.27-alpine
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/certs:/etc/nginx/certs:ro
+    depends_on: [synthlab]
+    restart: unless-stopped
+    networks: [internal]
+volumes:
+  synthlab-data:
+  synthlab-logs:
+networks:
+  internal:

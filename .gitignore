@@ -1,1 +1,16 @@
 .env
+.env.*
+!.env.example
+instance/
+*.db
+*.db-*
+*.log
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+.DS_Store
