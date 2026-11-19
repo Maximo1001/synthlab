@@ -9,8 +9,13 @@ en el navegador, con **cuentas de usuario y backend seguro** (Flask + SQLite).
 | **Backend** (`synthlab/`) | API JSON: registro con verificación por correo, login con 2FA (TOTP + códigos de recuperación), recuperación de contraseña, sesiones revocables, patrones guardados y compartibles, favoritos, exportación de datos (RGPD), baja, panel admin y auditoría. |
 | **Operación** | `gunicorn`, `nginx` (TLS + rate-limit), `systemd` bastionado, Docker no-root de solo lectura, CI con lint, tests, SAST, auditoría de dependencias y búsqueda de secretos. |
 
-Si la página se sirve sin backend (por ejemplo, en GitHub Pages) funciona en **modo demostración**:
-el laboratorio va completo y el área de cuenta explica que necesita el servidor.
+## Verla sin instalar nada (GitHub Pages)
+
+La web está publicada en **https://jmpicon.github.io/synthlab/** y funciona sin servidor en **modo local**:
+registro, inicio de sesión, patrones guardados, enlaces para compartir patrones y favoritos se guardan en el
+navegador del visitante (contraseña cifrada con PBKDF2-SHA256, 600.000 iteraciones; nunca en claro).
+Limitaciones del modo local: los datos no salen de ese navegador y no hay correos, 2FA, contacto, newsletter
+ni panel de administración. Todo eso lo da el backend cuando se despliega en un servidor (abajo).
 
 ## Arranque rápido (desarrollo)
 

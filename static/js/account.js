@@ -61,13 +61,7 @@ export function initAccount(ctx) {
   /* ---------- ACCOUNT: sin sesión ---------- */
   function renderAuth() {
     const box = $('#acBox'); box.className = 'ac';
-    if (!S.online) {
-      box.innerHTML = `<span class="tag">Cuenta</span><h2>Modo demostración</h2><div class="card"><p class="lead" style="margin:0">
-        Esta copia se está sirviendo sin servidor (por ejemplo, desde GitHub Pages). El laboratorio funciona completo,
-        pero el registro, los patrones guardados y los favoritos necesitan el backend de SYNTHLAB.
-        Consulta el README para arrancarlo en local en un minuto.</p></div>`;
-      return;
-    }
+    if (!S.online && S.mode === 'forgot') S.mode = 'login';
     const m = S.mode;
     const titles = { login: 'Bienvenido de nuevo', register: 'Crea tu cuenta', forgot: 'Recupera tu acceso',
       mfa: 'Verificación en dos pasos', reset: 'Elige una nueva contraseña' };
@@ -83,12 +77,12 @@ export function initAccount(ctx) {
     if (m === 'reset') form = field('f-p', 'Nueva contraseña (mín. 12)', 'password', 'new-password', 'required minlength="12"') + meterHtml('f-p') + field('f-p2', 'Repítela', 'password', 'new-password', 'required');
     const tabs = (m === 'login' || m === 'register') ? `<div class="tabs" role="tablist"><button role="tab" data-m="login" aria-selected="${m === 'login'}">Iniciar sesión</button><button role="tab" data-m="register" aria-selected="${m === 'register'}">Crear cuenta</button></div>` : '';
     const label = { login: 'Entrar', register: 'Crear cuenta', forgot: 'Enviar enlace', mfa: 'Verificar', reset: 'Guardar contraseña' }[m];
-    const foot = m === 'login' ? '<button data-m="forgot">¿Has olvidado tu contraseña?</button>'
+    const foot = m === 'login' ? (S.online ? '<button data-m="forgot">¿Has olvidado tu contraseña?</button>' : '¿Aún no tienes cuenta? <button data-m="register">Créala gratis</button>')
       : m === 'register' ? '¿Ya tienes cuenta? <button data-m="login">Inicia sesión</button>'
       : '<button data-m="login">Volver a iniciar sesión</button>';
     box.innerHTML = `<span class="tag">Únete a SYNTHLAB</span><h2>${titles[m]}</h2><div class="card">${tabs}
       <form id="af" novalidate>${form}<div class="er" id="er" role="alert"></div><div class="ok" id="okm" role="status"></div><button class="btn" type="submit">${label}</button></form>
-      <p class="sw2">${foot}</p><p class="sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Contraseñas con Argon2id · sesiones HttpOnly · 2FA opcional</p></div>`;
+      <p class="sw2">${foot}</p><p class="sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>${S.online ? 'Contraseñas con Argon2id · sesiones HttpOnly · 2FA opcional' : 'Tu cuenta se guarda sólo en este navegador · contraseña cifrada con PBKDF2'}</p></div>`;
     $$('[data-m]', box).forEach(b => b.onclick = () => { S.mode = b.dataset.m; renderAuth(); });
     wireEyes(box); meter('f-p');
     if (S.flash) { $('#okm').innerHTML = S.flash; S.flash = ''; }
@@ -153,10 +147,11 @@ export function initAccount(ctx) {
         <form id="pfn" class="row" novalidate>${field('p-n', 'Nombre', 'text', 'name', `maxlength="40" value="${esc(u.name)}"`)}<button class="btn o" type="submit">Guardar</button></form>
         <div class="er" id="pfer" role="alert"></div></div>
       <div class="card"><h3>Seguridad</h3>
-        <div class="kv"><span>Verificación en dos pasos</span><b class="badge ${u.mfa ? 'on' : ''}">${u.mfa ? 'Activa' : 'Desactivada'}</b></div>
-        <div class="pf">${u.mfa ? '<button class="btn o" id="mfaOff">Desactivar 2FA</button><button class="btn o" id="mfaCodes">Nuevos códigos de recuperación</button>' : '<button class="btn" id="mfaOn">Activar 2FA</button>'}
+        ${S.online ? '' : '<p class="mut">Estás usando la versión de GitHub: tu cuenta y tus patrones se guardan sólo en este navegador.</p>'}
+        ${S.online ? `<div class="kv"><span>Verificación en dos pasos</span><b class="badge ${u.mfa ? 'on' : ''}">${u.mfa ? 'Activa' : 'Desactivada'}</b></div>` : ''}
+        <div class="pf">${!S.online ? '' : u.mfa ? '<button class="btn o" id="mfaOff">Desactivar 2FA</button><button class="btn o" id="mfaCodes">Nuevos códigos de recuperación</button>' : '<button class="btn" id="mfaOn">Activar 2FA</button>'}
         <button class="btn o" id="chpw">Cambiar contraseña</button></div></div>
-      <div class="card span2"><div class="sqh"><h3>Sesiones activas</h3><button class="btn o" id="revAll">Cerrar las demás</button></div><div id="sess" class="list"><p class="mut">Cargando…</p></div></div>
+      <div class="card span2" ${S.online ? '' : 'hidden'}><div class="sqh"><h3>Sesiones activas</h3><button class="btn o" id="revAll">Cerrar las demás</button></div><div id="sess" class="list"><p class="mut">Cargando…</p></div></div>
       <div class="card span2"><div class="sqh"><h3>Mis patrones</h3><a class="btn o" href="#lab">Ir al laboratorio</a></div><div id="libp" class="list"></div></div>
       <div class="card"><h3>Favoritos</h3><div id="libf" class="list"></div></div>
       <div class="card"><h3>Tus datos</h3><p class="mut">Descarga todo lo que guardamos sobre ti o elimina tu cuenta (RGPD).</p>
@@ -192,7 +187,7 @@ export function initAccount(ctx) {
         onSubmit: async v => { const x = await api('me/2fa/recovery-codes', { method: 'POST', body: { password: v['q-p'] } }); showCodes(x.recovery_codes); return true; } });
     };
     $('#revAll').onclick = async () => { try { const r = await api('me/sessions/revoke-others', { method: 'POST' }); toast(`${r.revoked} sesión(es) cerrada(s)`); loadSessions(); } catch (x) { fail(x); } };
-    loadSessions(); renderLibrary();
+    if (S.online) loadSessions(); renderLibrary();
   }
   function mfaSetup() {
     ask({ title: 'Activar verificación en dos pasos', text: 'Confirma tu contraseña para generar la clave.', fields: [{ id: 'q-p', label: 'Contraseña' }], submit: 'Continuar',
@@ -280,7 +275,6 @@ export function initAccount(ctx) {
   /* ---------- barra de guardado del secuenciador ---------- */
   function renderSave() {
     const el = $('#sv'); if (!el) return;
-    if (!S.online) { el.innerHTML = '<p class="mut">Modo demostración: los patrones se guardan con el backend activo.</p>'; return; }
     if (!S.user) { el.innerHTML = '<p class="mut"><a class="lnk" href="#account">Inicia sesión</a> para guardar y compartir tus patrones.</p>'; return; }
     const cur = S.patterns.find(p => p.id === S.current);
     el.innerHTML = `<form id="svf" class="row" novalidate><label class="sr" for="sv-n">Nombre del patrón</label><input id="sv-n" maxlength="40" placeholder="Nombre del patrón" value="${cur ? esc(cur.name) : ''}">
@@ -305,7 +299,6 @@ export function initAccount(ctx) {
   }
   document.addEventListener('click', async e => {
     const b = e.target.closest('[data-fav]'); if (!b) return; e.preventDefault(); e.stopPropagation();
-    if (!S.online) return toast('Los favoritos necesitan el backend');
     if (!S.user) { toast('Inicia sesión para guardar favoritos'); location.hash = '#account'; return; }
     const slug = b.dataset.fav, on = S.favs.has(slug);
     try { await api('favorites/' + slug, { method: on ? 'DELETE' : 'PUT' }); on ? S.favs.delete(slug) : S.favs.add(slug); renderFavs(); renderLibrary(); toast(on ? 'Quitado de favoritos' : 'Añadido a favoritos'); } catch (x) { fail(x); }
@@ -397,9 +390,9 @@ export function initAccount(ctx) {
   addEventListener('hashchange', () => { if (location.hash === '#account') S.user ? renderAccount() : renderAuth(); if (location.hash === '#admin') renderAdmin(); });
   (async () => {
     S.online = await detectBackend();
-    if (S.online) { try { S.user = (await api('me')).user; await loadLibrary(); } catch (e) { S.user = null; } }
+    try { S.user = (await api('me')).user; await loadLibrary(); } catch (e) { S.user = null; }
     navUpd(); S.user ? renderAccount() : renderAuth();
     if (location.hash === '#admin') renderAdmin();
-    if (S.online) handleLinks();
+    handleLinks();
   })();
 }
