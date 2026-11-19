@@ -1,4 +1,5 @@
-// Cliente de la API de SYNTHLAB: JSON + token CSRF + detección de modo demo (sin backend).
+// Cliente de la API de SYNTHLAB: JSON + token CSRF. Sin servidor (GitHub Pages) usa el modo local.
+import { localApi } from './local.js';
 let csrf = null;
 let online = null;
 
@@ -23,7 +24,10 @@ export async function detectBackend() {
 }
 
 export async function api(path, { method = 'GET', body, retry = true } = {}) {
-  if (!online) throw new ApiError('Servidor no disponible (modo demostración).', 0);
+  if (!online) {
+    try { return await localApi(path, { method, body }); }
+    catch (e) { throw new ApiError(e.message || 'Error inesperado.', e.status || 500); }
+  }
   const opt = { method, credentials: 'same-origin', headers: { Accept: 'application/json' } };
   if (method !== 'GET') {
     if (!csrf) await refreshCsrf();
