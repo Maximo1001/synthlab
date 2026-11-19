@@ -17,6 +17,29 @@ navegador del visitante (contraseña cifrada con PBKDF2-SHA256, 600.000 iteracio
 Limitaciones del modo local: los datos no salen de ese navegador y no hay correos, 2FA, contacto, newsletter
 ni panel de administración. Todo eso lo da el backend cuando se despliega en un servidor (abajo).
 
+## Gestionar la web (sin instalar nada)
+
+La web se publica sola desde la rama `main`: **cada cambio que guardes en `main` aparece en
+https://maximo1001.github.io/synthlab/ en uno o dos minutos** (progreso en la pestaña *Actions* → *pages build and deployment*).
+
+**Editar desde GitHub:** abre el fichero → icono del lápiz ✏️ → cambia el texto → *Commit changes* → «Commit directly to the `main` branch».
+
+| Quiero cambiar… | Fichero | Dónde |
+|---|---|---|
+| Textos de las páginas (inicio, laboratorio, nosotros…) | `index.html` | busca el texto con Ctrl+F |
+| Productos del catálogo (nombre, descripción, características) | `static/js/app.js` | `const PRODS=[` (línea 12) |
+| Etapas de producción de «Recursos» | `static/js/app.js` | `const WF=[` (línea 21) |
+| Herramientas y software | `static/js/app.js` | `const SW=[` (línea 22) |
+| Enlaces a redes sociales (Instagram, YouTube…) | `static/js/app.js` | `const SOCURL=` (línea 23): cambia cada `'#'` por la URL |
+| Colores de la web | `static/css/app.css` | `:root{` (línea 1): `--pur`, `--lil`, `--yel`… |
+| Icono de la pestaña | `static/favicon.svg` | — |
+
+Consejos:
+- Si cambias un producto, mantén la misma estructura de corchetes y comillas; si la web deja de cargar, revierte
+  el último cambio desde la lista de commits (*History* → el commit → *Revert*).
+- No borres `static/js/local.js`, `api.js` ni `account.js`: son las cuentas y la biblioteca de patrones.
+- Los cambios en `synthlab/`, `tests/` o `deploy/` sólo afectan al backend (servidor), no a la web de GitHub.
+
 ## Arranque rápido (desarrollo)
 
 Requisitos: Python ≥ 3.11 y [uv](https://docs.astral.sh/uv/).
